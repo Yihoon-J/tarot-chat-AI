@@ -6,7 +6,7 @@ import json
 bedrock_runtime=boto3.client('bedrock-runtime')
 
 def invoke_model(input):
-    modelId='anthropic.claude-3-haiku-20240307-v1:0'
+    modelId='anthropic.claude-3-haiku-20240307-v1:0' #anthropic.claude-3-sonnet-20240229-v1:0
     accept="application/json"
     contentType="application/json"
     body=json.dumps({
