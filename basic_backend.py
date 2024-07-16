@@ -20,10 +20,10 @@ def bedrock_llm():
     )
     return llm
 
-conversation=ConversationChain(
-    llm=bedrock_llm(),
-    memory=ConversationBufferMemory()
-)
-
-response=conversation.predict(input='안녕하세요.')
-print(response)
+def conversation(text):
+    conversation=ConversationChain(
+        llm=bedrock_llm(),
+        memory=ConversationBufferMemory()
+    )
+    response=conversation.predict(input=text)
+    return response
