@@ -4,7 +4,6 @@
 # pip install boto3
 # pip install langchain-aws
 # pip install langchain-memory
-# install langchain-memory
 
 import os
 from langchain_aws import ChatBedrock
@@ -20,10 +19,15 @@ def bedrock_llm():
     )
     return llm
 
-def conversation(text):
+def buffer_memory():
+    buffer_memory=bedrock_llm()
+    bmemory=ConversationBufferMemory(llm=buffer_memory)
+    return bmemory
+
+def conversation(text, memory):
     conversation=ConversationChain(
         llm=bedrock_llm(),
-        memory=ConversationBufferMemory()
+        memory=memory,
     )
     response=conversation.predict(input=text)
     return response
