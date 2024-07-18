@@ -1,5 +1,5 @@
 import streamlit as st
-import local_langchain_only.basic_backend as be
+import basic_backend as be
 
 st.title('안녕하세요.')
 st.session_state.memory=be.buffer_memory()

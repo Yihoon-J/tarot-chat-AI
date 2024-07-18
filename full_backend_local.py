@@ -4,7 +4,8 @@
 from langchain_aws import ChatBedrock
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
+# from langchain.memory import ConversationBufferMemory
+
 
 class ConsoleCallbackHandler(BaseCallbackHandler):
     def on_llm_new_token(self, token: str, **kwargs):
