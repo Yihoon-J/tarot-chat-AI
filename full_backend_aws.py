@@ -1,13 +1,14 @@
 #sendmessage 구현 목표
 #wss://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production/
+#{"action":"sendMessage","message":"Good to see ㅛㅐㅕ."}
 #connectionid: event[requestContext][connectionId]
-#user input be like {"action": "sendMessage", "message": "Hi there?"} and can be found at event[body][message]
 import json
 import boto3
 from langchain_aws import ChatBedrock
 from langchain.memory import ConversationBufferMemory
 from langchain_community.chat_message_histories.dynamodb import DynamoDBChatMessageHistory
 from langchain.schema import HumanMessage, AIMessage
+
 
 # API Gateway client
 gateway_client = boto3.client('apigatewaymanagementapi', endpoint_url='https://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production')
@@ -75,7 +76,7 @@ def lambda_handler(event, context):
         # 대화 내용 저장
         memory.chat_memory.add_user_message(user_message)
         memory.chat_memory.add_ai_message(full_response)
-        
+
         # 스트리밍 완료 신호 전송
         gateway_client.post_to_connection(
             ConnectionId=connection_id,
