@@ -1,14 +1,12 @@
-#sendmessage 구현 목표
 #wss://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production/
 #{"action":"sendMessage","message":"Good to see ㅛㅐㅕ."}
-#connectionid: event[requestContext][connectionId]
+
 import json
 import boto3
 from langchain_aws import ChatBedrock
 from langchain.memory import ConversationBufferMemory
 from langchain_community.chat_message_histories.dynamodb import DynamoDBChatMessageHistory
 from langchain.schema import HumanMessage, AIMessage
-
 
 # API Gateway client
 gateway_client = boto3.client('apigatewaymanagementapi', endpoint_url='https://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production')
@@ -23,15 +21,17 @@ def stream_to_connection(connection_id, content):
         print(f"Error streaming: {str(e)}")
 
 def lambda_handler(event, context):
-    connection_id = event['requestContext']['connectionId']
+    connection_id = str(event['requestContext']['connectionId'])
     user_message = json.loads(event['body'])['message']
     
     # DynamoDB를 사용한 메모리 설정
+    chat_memory = DynamoDBChatMessageHistory(
+        table_name="tarotchat_ddb",
+        session_id=connection_id,
+    )
+    
     memory = ConversationBufferMemory(
-        chat_memory=DynamoDBChatMessageHistory(
-            table_name="tarotchat_ddb",
-            session_id=connection_id,
-        ),
+        chat_memory=chat_memory,
         return_messages=True
     )
     
