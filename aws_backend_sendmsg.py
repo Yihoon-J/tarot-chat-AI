@@ -1,5 +1,5 @@
 #wss://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production/
-#{"action":"sendMessage","message":"Good to see ㅛㅐㅕ."}
+#{"action":"sendMessage","message":"Good to see you."}
 
 import json
 import boto3
