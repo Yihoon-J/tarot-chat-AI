@@ -34,9 +34,14 @@ def lambda_handler(event, context):
         # AI 메시지로 저장
         history.add_message(AIMessage(content=welcome_message))
         
+        # 스트리밍 완료 신호 전송
+        gateway_client.post_to_connection(
+            ConnectionId=connection_id,
+            Data=json.dumps({"type": "end"}).encode('utf-8')
+        )
+            
         return {
-            'statusCode': 200,
-            'body': json.dumps('Connected and welcome message sent')
+            'statusCode': 200
         }
     except Exception as e:
         print(f"Error: {str(e)}")
