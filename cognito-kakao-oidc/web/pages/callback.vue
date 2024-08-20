@@ -1,23 +1,30 @@
 <template>
-  <div> callback page </div>
+  <div>Redirecting...</div>
 </template>
 
 <script setup lang="ts">
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
+import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
-const { accessToken } = storeToRefs(authStore)
+const route = useRoute()
+const authStore = useAuthStore()
 
 onMounted(() => {
   if (route.hash) {
-    route.hash.split('&').forEach((item) => {
-      const [key, value] = item.split('=')
-      if (key === 'id_token') {
-        accessToken.value = value
-        router.push('/')
-      }
-    })
+    const params = new URLSearchParams(route.hash.slice(1))
+    const idToken = params.get('id_token')
+    if (idToken) {
+      authStore.setAccessToken(idToken)
+      // Redirect to tarot.html on port 3001 with the token
+      window.location.href = `http://localhost:3001/tarot.html#id_token=${idToken}`
+    } else {
+      console.error('No id_token found in the callback URL')
+      // Handle error - maybe redirect to login page
+    }
+  } else {
+    console.error('No hash found in the callback URL')
+    // Handle error - maybe redirect to login page
   }
 })
 </script>

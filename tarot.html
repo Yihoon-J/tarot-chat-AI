@@ -1,0 +1,31 @@
+// tarot.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarot Chat</title>
+</head>
+<body>
+    <div id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script src="tarotchat_service.js"></script>
+    <script>
+        window.onload = function() {
+            const hash = window.location.hash.slice(1);
+            const params = new URLSearchParams(hash);
+            const idToken = params.get('id_token');
+            
+            if (idToken) {
+                // Initialize WebSocket connection with the token
+                initializeWebSocket(idToken);
+            } else {
+                console.error('No ID token found. Unable to establish WebSocket connection.');
+                // You might want to redirect the user back to the login page here
+            }
+        };
+    </script>
+</body>
+</html>
