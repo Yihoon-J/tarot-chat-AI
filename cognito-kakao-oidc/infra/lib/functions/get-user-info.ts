@@ -12,15 +12,25 @@ export const handler = async (event) => {
     const response = await client.send(command);
 
     const email = response.UserAttributes.find(attr => attr.Name === 'email')?.Value;
+    const nickname = response.UserAttributes.find(attr => attr.Name === 'nickname')?.Value;
+
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ email }),
+      headers: {
+        "Access-Control-Allow-Origin": "*", // CORS 설정
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, nickname }),
     };
   } catch (error) {
     console.error(error);
     return {
       statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*", // CORS 설정, 필요에 따라 수정
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ error: 'Internal Server Error' }),
     };
   }

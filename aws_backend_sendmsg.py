@@ -1,6 +1,3 @@
-#wss://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production/
-#{"action":"sendMessage","message":"Good to see you."}
-
 import json
 import boto3
 from langchain_aws import ChatBedrock
@@ -8,8 +5,9 @@ from langchain.memory import ConversationBufferMemory
 from langchain_community.chat_message_histories.dynamodb import DynamoDBChatMessageHistory
 from langchain.schema import HumanMessage, AIMessage
 
-# API Gateway client
 gateway_client = boto3.client('apigatewaymanagementapi', endpoint_url='https://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production')
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('tarotchat_ddb')
 
 def stream_to_connection(connection_id, content):
     try:
@@ -21,13 +19,31 @@ def stream_to_connection(connection_id, content):
         print(f"Error streaming: {str(e)}")
 
 def lambda_handler(event, context):
-    connection_id = str(event['requestContext']['connectionId'])
-    user_message = json.loads(event['body'])['message']
+    connection_id = event['requestContext']['connectionId']
+    body = json.loads(event['body'])
+    user_message = body['message']
+    user_id = body['userId']
+    
+    # 사용자의 최신 세션 ID 조회
+    response = table.query(
+        KeyConditionExpression=boto3.dynamodb.conditions.Key('UserId').eq(user_id),
+        ScanIndexForward=False,
+        Limit=1
+    )
+    session_id = response['Items'][0]['SessionId'] if response['Items'] else None
+    
+    if not session_id:
+        raise ValueError("Session not found")
     
     # DynamoDB를 사용한 메모리 설정
     chat_memory = DynamoDBChatMessageHistory(
         table_name="tarotchat_ddb",
-        session_id=connection_id,
+        session_id=f"{user_id}:{session_id}",
+        primary_key_name="UserId",
+        key={
+            "UserId": user_id,
+            "SessionId": session_id
+        }
     )
     
     memory = ConversationBufferMemory(
@@ -46,7 +62,6 @@ def lambda_handler(event, context):
     )
     
     try:
-        # 이전 대화 내용 가져오기
         chat_history = memory.chat_memory.messages
         messages = [HumanMessage(content="You are a helpful assistant.")]
         messages.extend(chat_history)
@@ -55,7 +70,6 @@ def lambda_handler(event, context):
         response = model.invoke(messages)
         full_response = ""
         
-        # response가 generator인 경우 처리
         if hasattr(response, '__iter__'):
             for chunk in response:
                 if isinstance(chunk, AIMessage):
@@ -69,15 +83,12 @@ def lambda_handler(event, context):
                     stream_to_connection(connection_id, content)
                     full_response += content
         else:
-            # response가 단일 메시지인 경우
             full_response = response.content if hasattr(response, 'content') else str(response)
             stream_to_connection(connection_id, full_response)
         
-        # 대화 내용 저장
         memory.chat_memory.add_user_message(user_message)
         memory.chat_memory.add_ai_message(full_response)
 
-        # 스트리밍 완료 신호 전송
         gateway_client.post_to_connection(
             ConnectionId=connection_id,
             Data=json.dumps({"type": "end"}).encode('utf-8')
