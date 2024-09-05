@@ -4,49 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarot Chat</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+        body { 
+            font-family: 'Pretendard Variable'; 
+            margin: 0; padding: 0; 
+            display: flex; 
+            height: 100vh; 
+        }
+        #mainContent {
+            display: flex; 
+            flex: 1;
+        }
+        #sidebar {
+            width: 255px; 
+            background-color: #F6F6F6; 
+            padding: 10px; 
+            overflow-y: auto;
+        }
+        #contentWrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
         #userInfo {
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background-color: #f0f0f0; 
+            padding: 10px; 
+            text-align: right;
+        }
+        #chatArea {
+            display: flex; 
+            flex-direction: column;
+            flex: 1;
         }
         #chatBox {
-            height: 400px;
-            border: 1px solid #ccc;
-            overflow-y: auto;
+            flex: 1; 
+            overflow-y: auto; 
             padding: 10px;
-            margin-bottom: 10px;
+        }
+        #inputArea {
+            box-sizing: border-box;
+
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            padding: 22px 22px;
+            gap: 20px;
+
+            width: 90%;
+            height: 73px;
+            
+            margin-left: 10px;
+            margin-right: 10px;
+            
+            background: #FFFFFF;
+            border: 1.3px solid #E0E0E0;
+            border-radius: 36.5px;
+
         }
         #messageInput {
-            width: 70%;
-            padding: 5px;
+            flex: 1;
+            height: 70px;
+            margin-left: 10px;
+            margin-right: 10px;
+            border: 0px;
+        }
+        
+        #warningmsg {
+            /* Tarot AI는 아직 학습중입니다. 답변에서 실수가 있을 수 있습니다. */
+
+            font-family: 'Pretendard';
+            font-style: normal;
+            font-weight: 500;
+            font-size: 14px;
+            line-height: 132%;
+            /* or 18px */
+            text-align: center;
+            color: #7D7D7D;
+
         }
         button {
-            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .session-item {
+            cursor: pointer; 
+            padding: 5px; 
+            margin-top: 10px;
+            margin-bottom: 5px; 
+        }
+        .session-item:hover {
+            background-color: #d7d7d7;
         }
     </style>
 </head>
 <body>
-    <div id="userInfo">
-        <span id="userDetails"></span>
-        <button onclick="logout()">Logout</button>
+    <div id="mainContent">
+        <div id="sidebar">
+            <div id="serviceIntro">
+                <p>서비스 설명</p>
+                <p>타로 챗봇인데요...</p>
+            </div>
+            <button id="newChatButton" onclick="startNewChat()">New Chat</button>
+            <div id="sessionList"></div>
+        </div>
+        <div id="contentWrapper">
+            <div id="userInfo">
+                <p><span id="userDetails"></span></p>
+                <button id="settings">Settings</button>
+                <button id="logoutButton" onclick="logout()">Logout</button>
+            </div>
+            <div id="chatArea">
+                <div id="chatBox"></div>
+                <div id="inputArea">
+                    <input type="text" id="messageInput" placeholder="고민상황을 자유롭게 물어보세요.">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+                <div id="warningmsg">
+                    <p>Tarot AI는 아직 학습중입니다. 답변에서 실수가 있을 수 있습니다.</p>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div id="chatBox"></div>
-
-    <input type="text" id="messageInput" placeholder="Type your message...">
-    <button onclick="sendMessage()">Send</button>
-
     <script src="tarotchat_service.js"></script>
 </body>
 </html>

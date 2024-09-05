@@ -5,14 +5,22 @@ dynamodb = boto3.resource('dynamodb')
 
 # 테이블 생성
 table = dynamodb.create_table(
-    TableName='tarotchat_ddb',  # 원하는 테이블 이름으로 변경 가능
+    TableName='tarotchat_ddb',
     KeySchema=[
         {
-            'AttributeName': 'SessionId',
+            'AttributeName': 'UserId',
             'KeyType': 'HASH'  # Partition key
+        },
+        {
+            'AttributeName': 'SessionId',
+            'KeyType': 'RANGE'  # Sort key
         }
     ],
     AttributeDefinitions=[
+        {
+            'AttributeName': 'UserId',
+            'AttributeType': 'S'  # String type
+        },
         {
             'AttributeName': 'SessionId',
             'AttributeType': 'S'  # String type
