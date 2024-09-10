@@ -29,6 +29,7 @@ def lambda_handler(event, context):
         )
         
         sessions = response['Items']
+        sessions = sorted(sessions, key=lambda x: x.get('LastUpdatedAt', ''), reverse=True)
         
         return {
             'statusCode': 200,

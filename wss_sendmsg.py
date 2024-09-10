@@ -2,13 +2,11 @@ import json
 import boto3
 from datetime import datetime
 from langchain_aws import ChatBedrock
-from langchain.memory import ConversationBufferMemory
-from langchain_community.chat_message_histories.dynamodb import DynamoDBChatMessageHistory
 from langchain.schema import HumanMessage, AIMessage
 
 gateway_client = boto3.client('apigatewaymanagementapi', endpoint_url='https://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production')
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('TarotChatSessions')
+table = dynamodb.Table('tarotchat_ddb')
 
 def stream_to_connection(connection_id, content):
     try:
@@ -19,6 +17,15 @@ def stream_to_connection(connection_id, content):
     except Exception as e:
         print(f"Error streaming: {str(e)}")
 
+def parse_messages(history_data):
+    messages = []
+    for item in json.loads(history_data):
+        if item['type'] == 'human':
+            messages.append(HumanMessage(content=item['data']['content']))
+        elif item['type'] == 'ai':
+            messages.append(AIMessage(content=item['data']['content']))
+    return messages
+
 def lambda_handler(event, context):
     connection_id = event['requestContext']['connectionId']
     body = json.loads(event['body'])
@@ -27,29 +34,28 @@ def lambda_handler(event, context):
     session_id = body['sessionId']
 
     try:
-        # Update LastUpdatedAt for the session
-        table.update_item(
-            Key={'UserId': user_id, 'SessionId': session_id},
-            UpdateExpression="set LastUpdatedAt = :t",
-            ExpressionAttributeValues={':t': datetime.now().isoformat()}
-        )
-
-        # DynamoDB를 사용한 메모리 설정
-        chat_memory = DynamoDBChatMessageHistory(
-            table_name="tarotchat_ddb",
-            session_id=f"{user_id}:{session_id}",
-            primary_key_name="UserId",
-            key={
-                "UserId": user_id,
-                "SessionId": session_id
+        # 기존 항목 가져오기
+        response = table.get_item(
+            Key={
+                'UserId': user_id,
+                'SessionId': session_id
             }
         )
+        
+        if 'Item' not in response:
+            raise Exception("Session not found")
 
-        memory = ConversationBufferMemory(
-            chat_memory=chat_memory,
-            return_messages=True
-        )
+        existing_item = response['Item']
+        
+        print(f"Existing item: {existing_item}")  # 디버깅 정보
+        
+        # History 파싱
+        history_data = existing_item.get('History', '[]')
+        existing_messages = parse_messages(history_data)
+        
+        print(f"Parsed messages: {existing_messages}")  # 디버깅 정보
 
+        # 모델 설정
         model = ChatBedrock(
             model_id="anthropic.claude-3-haiku-20240307-v1:0",
             streaming=True,
@@ -60,11 +66,14 @@ def lambda_handler(event, context):
             }
         )
 
-        chat_history = memory.chat_memory.messages
+        # 메시지 준비
         messages = [HumanMessage(content="You are a helpful assistant.")]
-        messages.extend(chat_history)
+        messages.extend(existing_messages)
         messages.append(HumanMessage(content=user_message))
 
+        print(f"Messages to be sent to model: {messages}")  # 디버깅 정보
+
+        # 응답 생성
         response = model.invoke(messages)
         full_response = ""
 
@@ -84,8 +93,32 @@ def lambda_handler(event, context):
             full_response = response.content if hasattr(response, 'content') else str(response)
             stream_to_connection(connection_id, full_response)
 
-        memory.chat_memory.add_user_message(user_message)
-        memory.chat_memory.add_ai_message(full_response)
+        # 현재 시간 가져오기
+        current_time = datetime.now().isoformat()
+
+        # 업데이트된 history 생성
+        updated_history = json.dumps([
+            {
+                "type": "human" if isinstance(msg, HumanMessage) else "ai",
+                "data": {"content": msg.content}
+            } for msg in messages + [AIMessage(content=full_response)]
+        ])
+
+        # DynamoDB 항목 업데이트
+        update_expression = "SET History = :history, LastUpdatedAt = :last_updated_at"
+        expression_attribute_values = {
+            ':history': updated_history,
+            ':last_updated_at': current_time
+        }
+
+        table.update_item(
+            Key={
+                'UserId': user_id,
+                'SessionId': session_id
+            },
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expression_attribute_values
+        )
 
         gateway_client.post_to_connection(
             ConnectionId=connection_id,
@@ -93,8 +126,12 @@ def lambda_handler(event, context):
         )
         
         return {'statusCode': 200}
+
     except Exception as e:
         print(f"Error: {str(e)}")
+        print(f"Error type: {type(e).__name__}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         gateway_client.post_to_connection(
             ConnectionId=connection_id,
             Data=json.dumps({"type": "error", "message": str(e)}).encode('utf-8')

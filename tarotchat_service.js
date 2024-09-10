@@ -94,6 +94,7 @@ function connectWebSocket() {
 
     socket.onopen = function(event) {
         console.log('WebSocket connected');
+        console.log('Current Session ID:', currentSessionId);
     };
 
     socket.onmessage = function(event) {
@@ -151,10 +152,14 @@ async function startNewChat() {
             body: JSON.stringify({ userId: userId })
         });
         const result = await response.json();
-        currentSessionId = result.sessionId;
-        connectWebSocket();
-        document.getElementById('chatBox').innerHTML = '';
-        fetchSessions();  // Refresh the session list
+        if (response.ok) {
+            currentSessionId = result.sessionId;
+            connectWebSocket();
+            document.getElementById('chatBox').innerHTML = '';
+            fetchSessions();  // Refresh the session list
+        } else {
+            console.error('Error creating new session:', result.error);
+        }
     } catch (error) {
         console.error('Error creating new session:', error);
     }

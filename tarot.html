@@ -16,6 +16,12 @@
             display: flex; 
             flex: 1;
         }
+        #serviceguide {
+            width: 255px; 
+            background-color: #f0f0f0; 
+            padding: 10px; 
+            overflow-y: auto;
+        }
         #sidebar {
             width: 255px; 
             background-color: #F6F6F6; 
@@ -72,8 +78,6 @@
         }
         
         #warningmsg {
-            /* Tarot AI는 아직 학습중입니다. 답변에서 실수가 있을 수 있습니다. */
-
             font-family: 'Pretendard';
             font-style: normal;
             font-weight: 500;
@@ -100,11 +104,14 @@
 </head>
 <body>
     <div id="mainContent">
+        <div id="serviceguide">
+            <p>서비스 설명</p>
+            <p>타로 챗봇인데요...</p>
+        </div>
         <div id="sidebar">
             <div id="serviceIntro">
-                <p>서비스 설명</p>
-                <p>타로 챗봇인데요...</p>
             </div>
+            <button id="ShowGuide">가이드</button>
             <button id="newChatButton" onclick="startNewChat()">New Chat</button>
             <div id="sessionList"></div>
         </div>
