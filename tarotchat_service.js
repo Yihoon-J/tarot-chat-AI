@@ -55,6 +55,27 @@ function displaySessions(sessions) {
     });
 }
 
+function displayMessages(messages) {
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '';
+    messages.forEach(message => {
+        const role = message.type === 'human' ? 'You' : 'AI';
+        let content = message.content; // 직접 'content' 속성에 접근
+        if (content) {
+            appendMessage(role, content);
+        }
+    });
+}
+
+function extractContent(contentData) {
+    if (typeof contentData === 'string') {
+        return contentData;
+    } else if (typeof contentData === 'object' && contentData !== null) {
+        return contentData.content || JSON.stringify(contentData);
+    }
+    return JSON.stringify(contentData);
+}
+
 async function loadSession(sessionId) {
     currentSessionId = sessionId;
     try {
@@ -76,14 +97,6 @@ async function loadSession(sessionId) {
     }
 }
 
-function displayMessages(messages) {
-    const chatBox = document.getElementById('chatBox');
-    chatBox.innerHTML = '';
-    messages.forEach(message => {
-        appendMessage(message.role, message.content);
-    });
-}
-
 function connectWebSocket() {
     if (socket) {
         socket.close();
@@ -99,13 +112,7 @@ function connectWebSocket() {
 
     socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
-        if (data.type === 'stream') {
-            appendMessage('AI', data.content);
-        } else if (data.type === 'end') {
-            console.log('Stream ended');
-        } else if (data.type === 'error') {
-            console.error('Error:', data.message);
-        }
+        handleIncomingMessage(data);
     };
 
     socket.onclose = function(event) {
@@ -135,8 +142,19 @@ function sendMessage() {
 
 function appendMessage(sender, message) {
     const chatBox = document.getElementById('chatBox');
-    const messageElement = document.createElement('p');
-    messageElement.innerHTML = `<strong>${sender}:</strong> ${message.replace(/\n/g, '<br>')}`;
+    const messageElement = document.createElement('div');
+    messageElement.className = sender.toLowerCase() === 'you' ? 'user-message' : 'ai-message';
+    
+    const senderElement = document.createElement('strong');
+    senderElement.textContent = `${sender}:`;
+    
+    const contentElement = document.createElement('span');
+    contentElement.innerHTML = message.replace(/\n/g, '<br>');
+    
+    messageElement.appendChild(senderElement);
+    messageElement.appendChild(document.createElement('br'));
+    messageElement.appendChild(contentElement);
+    
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -162,6 +180,16 @@ async function startNewChat() {
         }
     } catch (error) {
         console.error('Error creating new session:', error);
+    }
+}
+
+function handleIncomingMessage(data) {
+    if (data.type === 'stream') {
+        appendMessage('AI', extractContent(data.content));
+    } else if (data.type === 'end') {
+        console.log('Stream ended');
+    } else if (data.type === 'error') {
+        console.error('Error:', data.message);
     }
 }
 

@@ -21,10 +21,27 @@ def parse_messages(history_data):
     messages = []
     for item in json.loads(history_data):
         if item['type'] == 'human':
-            messages.append(HumanMessage(content=item['data']['content']))
+            messages.append(HumanMessage(content=item['content']))
         elif item['type'] == 'ai':
-            messages.append(AIMessage(content=item['data']['content']))
+            messages.append(AIMessage(content=item['content']))
     return messages
+
+def extract_content(response):
+    print(f"extract_content input: {response}")
+    if isinstance(response, str):
+        return response
+    elif isinstance(response, AIMessage):
+        return response.content
+    elif isinstance(response, dict):
+        if 'content' in response:
+            return response['content']
+        elif 'response' in response:
+            return response['response']
+    elif isinstance(response, tuple):
+        if len(response) > 1 and response[0] == 'content':
+            return response[1]
+    print(f"extract_content output: Unable to extract content")
+    return ""
 
 def lambda_handler(event, context):
     connection_id = event['requestContext']['connectionId']
@@ -34,28 +51,15 @@ def lambda_handler(event, context):
     session_id = body['sessionId']
 
     try:
-        # 기존 항목 가져오기
-        response = table.get_item(
-            Key={
-                'UserId': user_id,
-                'SessionId': session_id
-            }
-        )
+        response = table.get_item(Key={'UserId': user_id, 'SessionId': session_id})
         
         if 'Item' not in response:
             raise Exception("Session not found")
 
         existing_item = response['Item']
-        
-        print(f"Existing item: {existing_item}")  # 디버깅 정보
-        
-        # History 파싱
         history_data = existing_item.get('History', '[]')
         existing_messages = parse_messages(history_data)
-        
-        print(f"Parsed messages: {existing_messages}")  # 디버깅 정보
 
-        # 모델 설정
         model = ChatBedrock(
             model_id="anthropic.claude-3-haiku-20240307-v1:0",
             streaming=True,
@@ -66,45 +70,36 @@ def lambda_handler(event, context):
             }
         )
 
-        # 메시지 준비
         messages = [HumanMessage(content="You are a helpful assistant.")]
         messages.extend(existing_messages)
         messages.append(HumanMessage(content=user_message))
 
-        print(f"Messages to be sent to model: {messages}")  # 디버깅 정보
-
-        # 응답 생성
         response = model.invoke(messages)
-        full_response = ""
 
+        full_response = ""
         if hasattr(response, '__iter__'):
             for chunk in response:
-                if isinstance(chunk, AIMessage):
-                    content = chunk.content
-                elif isinstance(chunk, dict) and 'content' in chunk:
-                    content = chunk['content']
-                else:
-                    content = str(chunk)
-
-                if content:
+                print(f"Response chunk: {chunk}")
+                content = extract_content(chunk)
+                print(f"Extracted content from chunk: {content}")
+                if content and isinstance(content, str):
                     stream_to_connection(connection_id, content)
                     full_response += content
         else:
-            full_response = response.content if hasattr(response, 'content') else str(response)
+            full_response = extract_content(response)
             stream_to_connection(connection_id, full_response)
 
-        # 현재 시간 가져오기
-        current_time = datetime.now().isoformat()
 
-        # 업데이트된 history 생성
+        current_time = datetime.now().isoformat()
+        
         updated_history = json.dumps([
             {
                 "type": "human" if isinstance(msg, HumanMessage) else "ai",
-                "data": {"content": msg.content}
+                "content": msg.content if isinstance(msg, HumanMessage) else full_response
             } for msg in messages + [AIMessage(content=full_response)]
         ])
 
-        # DynamoDB 항목 업데이트
+
         update_expression = "SET History = :history, LastUpdatedAt = :last_updated_at"
         expression_attribute_values = {
             ':history': updated_history,
@@ -112,13 +107,11 @@ def lambda_handler(event, context):
         }
 
         table.update_item(
-            Key={
-                'UserId': user_id,
-                'SessionId': session_id
-            },
+            Key={'UserId': user_id, 'SessionId': session_id},
             UpdateExpression=update_expression,
             ExpressionAttributeValues=expression_attribute_values
         )
+
 
         gateway_client.post_to_connection(
             ConnectionId=connection_id,
