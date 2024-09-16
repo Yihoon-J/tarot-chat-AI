@@ -59,7 +59,7 @@ function displayMessages(messages) {
     const chatBox = document.getElementById('chatBox');
     chatBox.innerHTML = '';
     messages.forEach(message => {
-        const role = message.type === 'human' ? 'You' : 'AI';
+        const role = message.type === 'human' ? 'user' : 'ai';
         let content = message.content; // 직접 'content' 속성에 접근
         if (content) {
             appendMessage(role, content);
@@ -128,7 +128,7 @@ function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     if (message && currentSessionId) {
-        appendMessage('You', message);
+        appendMessage('user', message);
         const payload = {
             action: 'sendMessage',
             message: message,
@@ -143,20 +143,64 @@ function sendMessage() {
 function appendMessage(sender, message) {
     const chatBox = document.getElementById('chatBox');
     const messageElement = document.createElement('div');
-    messageElement.className = sender.toLowerCase() === 'you' ? 'user-message' : 'ai-message';
+    messageElement.className = `message ${sender}-message`;
     
-    const senderElement = document.createElement('strong');
-    senderElement.textContent = `${sender}:`;
-    
-    const contentElement = document.createElement('span');
+    const contentElement = document.createElement('div');
+    contentElement.className = 'message-content';
     contentElement.innerHTML = message.replace(/\n/g, '<br>');
     
-    messageElement.appendChild(senderElement);
-    messageElement.appendChild(document.createElement('br'));
     messageElement.appendChild(contentElement);
     
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function handleIncomingMessage(data) {
+    if (data.type === 'stream') {
+        appendMessage('ai', extractContent(data.content));
+    } else if (data.type === 'end') {
+        console.log('Stream ended');
+    } else if (data.type === 'error') {
+        console.error('Error:', data.message);
+    }
+}
+
+function applyStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        #chatArea {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        #chatBox {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .message {
+            max-width: 70%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .ai-message {
+            align-self: flex-start;
+            margin-left: 50px;
+            background-color: #EEEEEE;
+        }
+        .user-message {
+            align-self: flex-end;
+            margin-right: 50px;
+            background-color: #F6F6F6;
+        }
+        .message-content {
+            word-wrap: break-word;
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 async function startNewChat() {
@@ -170,11 +214,22 @@ async function startNewChat() {
             body: JSON.stringify({ userId: userId })
         });
         const result = await response.json();
+        console.log('New session result:', result);  // 디버깅을 위한 로그 추가
         if (response.ok) {
             currentSessionId = result.sessionId;
             connectWebSocket();
             document.getElementById('chatBox').innerHTML = '';
             fetchSessions();  // Refresh the session list
+            
+            if (result.welcomeMessage) {
+                console.log('Welcome message:', result.welcomeMessage);
+                // 웰컴 메시지 표시에 1초의 지연 추가
+                setTimeout(() => {
+                    appendMessage('ai', result.welcomeMessage);
+                }, 200);
+            } else {
+                console.log('No welcome message in the response');
+            }
         } else {
             console.error('Error creating new session:', result.error);
         }
@@ -220,3 +275,9 @@ document.getElementById('messageInput').addEventListener('keypress', function(e)
 
 // Initialize the page when the script loads
 document.addEventListener('DOMContentLoaded', initializePage);
+
+// Call this function when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    initializePage();
+    applyStyles();
+});
