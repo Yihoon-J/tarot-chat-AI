@@ -2,7 +2,7 @@ import json
 import boto3
 from datetime import datetime
 from langchain_aws import ChatBedrock
-from langchain.schema import HumanMessage, AIMessage
+from langchain.schema import HumanMessage, AIMessage, SystemMessage
 
 gateway_client = boto3.client('apigatewaymanagementapi', endpoint_url='https://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production')
 dynamodb = boto3.resource('dynamodb')
@@ -70,8 +70,16 @@ def lambda_handler(event, context):
             }
         )
 
-        messages = [HumanMessage(content="You are a helpful assistant.")]
+        # 시스템 메시지 추가
+        messages = [SystemMessage(content="You are a helpful assistant.")]
+        
+        # 사용자 메시지 추가 (빈 메시지로 시작)
+        messages.append(HumanMessage(content="."))
+
+        # 기존 메시지 추가 (AI 메시지부터 시작)
         messages.extend(existing_messages)
+
+        # 새 사용자 메시지 추가
         messages.append(HumanMessage(content=user_message))
 
         response = model.invoke(messages)
@@ -89,16 +97,13 @@ def lambda_handler(event, context):
             full_response = extract_content(response)
             stream_to_connection(connection_id, full_response)
 
-
         current_time = datetime.now().isoformat()
         
-        updated_history = json.dumps([
-            {
-                "type": "human" if isinstance(msg, HumanMessage) else "ai",
-                "content": msg.content if isinstance(msg, HumanMessage) else full_response
-            } for msg in messages + [AIMessage(content=full_response)]
-        ])
-
+        # 히스토리 업데이트
+        existing_history = json.loads(history_data)
+        existing_history.append({"type": "human", "content": user_message})
+        existing_history.append({"type": "ai", "content": full_response})
+        updated_history = json.dumps(existing_history)
 
         update_expression = "SET History = :history, LastUpdatedAt = :last_updated_at"
         expression_attribute_values = {
@@ -111,7 +116,6 @@ def lambda_handler(event, context):
             UpdateExpression=update_expression,
             ExpressionAttributeValues=expression_attribute_values
         )
-
 
         gateway_client.post_to_connection(
             ConnectionId=connection_id,
