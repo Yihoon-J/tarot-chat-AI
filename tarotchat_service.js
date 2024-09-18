@@ -51,6 +51,10 @@ function displaySessions(sessions) {
         sessionElement.className = 'session-item';
         sessionElement.textContent = session.SessionName;
         sessionElement.onclick = () => loadSession(session.SessionId);
+        sessionElement.setAttribute('data-session-id', session.SessionId);
+        if (session.SessionId === currentSessionId) {
+            sessionElement.classList.add('active');
+        }
         sessionList.appendChild(sessionElement);
     });
 }
@@ -77,6 +81,18 @@ function extractContent(contentData) {
 }
 
 async function loadSession(sessionId) {
+    // Remove 'active' class from previously active session
+    const previousActive = document.querySelector('.session-item.active');
+    if (previousActive) {
+        previousActive.classList.remove('active');
+    }
+    
+    // Add 'active' class to newly selected session
+    const newActive = document.querySelector(`.session-item[data-session-id="${sessionId}"]`);
+    if (newActive) {
+        newActive.classList.add('active');
+    }
+
     currentSessionId = sessionId;
     try {
         const response = await fetch(`${API_URL}/sessions/${sessionId}?userId=${userId}`, {
@@ -98,46 +114,94 @@ async function loadSession(sessionId) {
 }
 
 function connectWebSocket() {
-    if (socket) {
-        socket.close();
-    }
-    
-    const wsUrl = `${WS_URL}?userId=${encodeURIComponent(userId)}&sessionId=${currentSessionId}`;
-    socket = new WebSocket(wsUrl);
+    return new Promise((resolve, reject) => {
+        if (socket) {
+            socket.close();
+        }
+        
+        const wsUrl = `${WS_URL}?userId=${encodeURIComponent(userId)}&sessionId=${currentSessionId}`;
+        socket = new WebSocket(wsUrl);
 
-    socket.onopen = function(event) {
-        console.log('WebSocket connected');
-        console.log('Current Session ID:', currentSessionId);
-    };
+        socket.onopen = function(event) {
+            console.log('WebSocket connected');
+            console.log('Current Session ID:', currentSessionId);
+            resolve();
+        };
 
-    socket.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        handleIncomingMessage(data);
-    };
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            handleIncomingMessage(data);
+        };
 
-    socket.onclose = function(event) {
-        console.log('WebSocket closed. Code:', event.code, 'Reason:', event.reason);
-    };
+        socket.onclose = function(event) {
+            console.log('WebSocket closed. Code:', event.code, 'Reason:', event.reason);
+        };
 
-    socket.onerror = function(error) {
-        console.error('WebSocket error:', error);
-    };
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            reject(error);
+        };
+    });
 }
 
-function sendMessage() {
+async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
-    if (message && currentSessionId) {
-        appendMessage('user', message);
-        const payload = {
-            action: 'sendMessage',
-            message: message,
-            userId: userId,
-            sessionId: currentSessionId
-        };
-        socket.send(JSON.stringify(payload));
+    if (message) {
+        if (!currentSessionId) {
+            await createAndConnectNewSession(message);
+        } else {
+            sendMessageToCurrentSession(message);
+        }
         messageInput.value = '';
     }
+}
+
+// 세션 생성과 연결 동시에 수행
+async function createAndConnectNewSession(initialMessage) {
+    try {
+        const response = await fetch(`${API_URL}/sessions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authToken
+            },
+            body: JSON.stringify({ userId: userId })
+        });
+        const result = await response.json();
+        
+        if (response.ok) {
+            currentSessionId = result.sessionId;
+            await connectWebSocket();
+            document.getElementById('chatBox').innerHTML = '';
+            fetchSessions();
+
+            if (result.welcomeMessage) {
+                appendMessage('ai', result.welcomeMessage);
+            }
+
+            // Send the initial message after a short delay
+            setTimeout(() => {
+                sendMessageToCurrentSession(initialMessage);
+            }, 500);
+        } else {
+            console.error('Error creating new session:', result.error);
+        }
+    } catch (error) {
+        console.error('Error creating new session:', error);
+    }
+}
+
+// 현재 세션에 메시지 전송
+function sendMessageToCurrentSession(message) {
+    appendMessage('user', message);
+    const payload = {
+        action: 'sendMessage',
+        message: message,
+        userId: userId,
+        sessionId: currentSessionId
+    };
+    socket.send(JSON.stringify(payload));
 }
 
 function appendMessage(sender, message) {
@@ -171,38 +235,7 @@ function handleIncomingMessage(data) {
 }
 
 async function startNewChat() {
-    try {
-        const response = await fetch(`${API_URL}/sessions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authToken
-            },
-            body: JSON.stringify({ userId: userId })
-        });
-        const result = await response.json();
-        console.log('New session result:', result);  // 디버깅을 위한 로그 추가
-        if (response.ok) {
-            currentSessionId = result.sessionId;
-            connectWebSocket();
-            document.getElementById('chatBox').innerHTML = '';
-            fetchSessions();  // Refresh the session list
-            
-            if (result.welcomeMessage) {
-                console.log('Welcome message:', result.welcomeMessage);
-                // 웰컴 메시지 표시에 1초의 지연 추가
-                setTimeout(() => {
-                    appendMessage('ai', result.welcomeMessage);
-                }, 200);
-            } else {
-                console.log('No welcome message in the response');
-            }
-        } else {
-            console.error('Error creating new session:', result.error);
-        }
-    } catch (error) {
-        console.error('Error creating new session:', error);
-    }
+    await createAndConnectNewSession('');
 }
 
 function logout() {

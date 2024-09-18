@@ -32,7 +32,7 @@
             font-style: bold;
             margin-bottom: 22px;
         }
-        #Guide1, #Guide2{
+        #Guide1, #Guide2, #Guide3{
             border-radius: 16px;
             border: 1px solid #E0E0E0;
             Padding: 10px;
@@ -76,7 +76,8 @@
             transition: background-color 0.3s ease;
           }
         #newChatButton:hover, #ShowGuide:hover {
-            background-color: #D0D0D0;
+            background-color: #ececec;
+            color: #646464;
         }
 
         #sessionList{
@@ -99,7 +100,8 @@
             transition: background-color 0.3s ease;
         }
         #Settings:hover{
-            background-color: #D0D0D0;
+            background-color: #ececec;
+            color: #646464;
         }
         #contentWrapper {
             display: flex;
@@ -207,7 +209,10 @@
             transition: background-color 0.3s ease; 
         }
         .session-item:hover {
-            background-color: #d7d7d7;
+            background-color: #ececec;
+        }
+        .session-item.active {
+            background-color: #dddddd
         }
     </style>
 </head>
@@ -234,9 +239,17 @@
             </div>
             <div id="Guide2">
                 <p>추가적인 정보를 알고 싶다면 '조언'이나 '추가질문'을 질문해보세요.</p>
-                <div>어쩌구</div>
-                <div>저쩌구</div>
-
+                <p>
+                    <div>어쩌구</div>
+                    <div>저쩌구</div>
+                </p>
+            </div>
+            <div id="Guide3">
+                <p>대화가 너무 길어지면 답변이 부정확해질 수 있습니다.</p>
+                <p>
+                    <div>돈도 많이 들엉</div>
+                    <div>하지마 좀!!!</div>
+                </p>
             </div>
         </div>
         <div id="contentWrapper">
