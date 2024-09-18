@@ -150,7 +150,12 @@ function appendMessage(sender, message) {
     contentElement.innerHTML = message.replace(/\n/g, '<br>');
     
     messageElement.appendChild(contentElement);
-    chatBox.appendChild(messageElement);
+    chatBox.insertBefore(messageElement, chatBox.firstChild);
+    scrollToBottom()
+}
+
+function scrollToBottom() {
+    const chatBox = document.getElementById('chatBox');
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
@@ -159,6 +164,7 @@ function handleIncomingMessage(data) {
         appendMessage('ai', extractContent(data.content));
     } else if (data.type === 'end') {
         console.log('Stream ended');
+        scrollToBottom();
     } else if (data.type === 'error') {
         console.error('Error:', data.message);
     }
