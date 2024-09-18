@@ -60,7 +60,7 @@ function displayMessages(messages) {
     chatBox.innerHTML = '';
     messages.forEach(message => {
         const role = message.type === 'human' ? 'user' : 'ai';
-        let content = message.content; // 직접 'content' 속성에 접근
+        let content = message.content;
         if (content) {
             appendMessage(role, content);
         }
@@ -150,7 +150,6 @@ function appendMessage(sender, message) {
     contentElement.innerHTML = message.replace(/\n/g, '<br>');
     
     messageElement.appendChild(contentElement);
-    
     chatBox.appendChild(messageElement);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -163,44 +162,6 @@ function handleIncomingMessage(data) {
     } else if (data.type === 'error') {
         console.error('Error:', data.message);
     }
-}
-
-function applyStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        #chatArea {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        #chatBox {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
-        .message {
-            max-width: 70%;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        .ai-message {
-            align-self: flex-start;
-            margin-left: 50px;
-            background-color: #EEEEEE;
-        }
-        .user-message {
-            align-self: flex-end;
-            margin-right: 50px;
-            background-color: #F6F6F6;
-        }
-        .message-content {
-            word-wrap: break-word;
-        }
-    `;
-    document.head.appendChild(style);
 }
 
 async function startNewChat() {
@@ -238,16 +199,6 @@ async function startNewChat() {
     }
 }
 
-function handleIncomingMessage(data) {
-    if (data.type === 'stream') {
-        appendMessage('AI', extractContent(data.content));
-    } else if (data.type === 'end') {
-        console.log('Stream ended');
-    } else if (data.type === 'error') {
-        console.error('Error:', data.message);
-    }
-}
-
 function logout() {
     authToken = null;
     userEmail = null;
@@ -279,5 +230,4 @@ document.addEventListener('DOMContentLoaded', initializePage);
 // Call this function when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     initializePage();
-    applyStyles();
 });
