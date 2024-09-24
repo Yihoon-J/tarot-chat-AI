@@ -90,6 +90,7 @@
         #sessionList{
             width: 100%;
             overflow-y: auto;
+            overflow-x: hidden;
         }
         #Settings{
             position: absolute;
@@ -208,14 +209,16 @@
             cursor: pointer;
         }
         .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             cursor: pointer; 
             padding: 5px;
             width: 327px;
-            height: 55px;
-            line-height: 55px;
+            height: 50px;
             overflow: hidden;
             margin: 0px 20px;
-            text-align: center;
+            text-align: left;
             border-radius: 16px;
             font-size: 16px;
             transition: background-color 0.3s ease; 
@@ -225,6 +228,16 @@
         }
         .session-item.active {
             background-color: #dddddd
+        }
+        .delete-button{
+            background-color: #ff4d4d;
+            cursor: pointer;
+        }
+        .session-item:hover .delete-button {
+            opacity: 1;
+        }
+        .delete-button.hover {
+            background-color: #ff3333
         }
     </style>
 </head>

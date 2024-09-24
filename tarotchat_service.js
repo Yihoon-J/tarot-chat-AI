@@ -49,12 +49,26 @@ function displaySessions(sessions) {
     sessions.forEach(session => {
         const sessionElement = document.createElement('div');
         sessionElement.className = 'session-item';
-        sessionElement.textContent = session.SessionName;
-        sessionElement.onclick = () => loadSession(session.SessionId);
+        
+        const sessionName = document.createElement('span');
+        sessionName.textContent = session.SessionName;
+        sessionName.onclick = () => loadSession(session.SessionId);
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'D';
+        deleteButton.onclick = (e) => {
+            e.stopPropagation(); // 세션 로드 방지
+            deleteSession(session.SessionId);
+        };
+        
+        sessionElement.appendChild(sessionName);
+        sessionElement.appendChild(deleteButton);
         sessionElement.setAttribute('data-session-id', session.SessionId);
+        
         if (session.SessionId === currentSessionId) {
             sessionElement.classList.add('active');
         }
+        
         sessionList.appendChild(sessionElement);
     });
 }
@@ -236,6 +250,32 @@ function handleIncomingMessage(data) {
 
 async function startNewChat() {
     await createAndConnectNewSession('');
+}
+
+async function deleteSession(sessionId) {
+    if (!confirm('정말로 이 세션을 삭제하시겠습니까?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/sessions/${sessionId}?userId=${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': authToken }
+        });
+
+        if (response.ok) {
+            console.log('Session deleted successfully');
+            fetchSessions(); // 세션 목록 새로고침
+            if (currentSessionId === sessionId) {
+                currentSessionId = null;
+                document.getElementById('chatBox').innerHTML = '';
+            }
+        } else {
+            console.error('Error deleting session:', await response.text());
+        }
+    } catch (error) {
+        console.error('Error deleting session:', error);
+    }
 }
 
 function logout() {
