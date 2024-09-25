@@ -12,7 +12,7 @@ from langchain.chains import ConversationChain
 
 def bedrock_llm():
     llm = ChatBedrock(
-        model_id="anthropic.claude-3-haiku-20240307-v1:0", #"anthropic.claude-3-sonnet-20240229-v1:0",
+        model_id="anthropic.claude-3-haiku-20240307-v1:0"
         model_kwargs={
             'temperature': 0.5,
         },

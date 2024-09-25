@@ -43,6 +43,34 @@ def extract_content(response):
     print(f"extract_content output: Unable to extract content")
     return ""
 
+def generate_session_name(user_message):
+    model=ChatBedrock(
+        model_id="anthropic.claude-3-haiku-20240307-v1:0",
+        model_kwargs={
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 1000,
+            "temperature": 0.1
+        }
+    )
+    prompt = f"사용자의 다음 고민을 바탕으로 30자 이내의 세션 이름을 생성해 줘: {user_message}"
+    response = model.invoke([HumanMessage(content=prompt)])
+    print('Session Name Suggested: ', response)
+    session_name=response.content.strip()
+    return session_name
+
+def update_session_name(user_id, session_id, new_name):
+    response = table.update_item(
+        Key={'UserId': user_id, 'SessionId': session_id},
+        UpdateExpression="SET SessionName = :name",
+        ExpressionAttributeValues={':name': new_name}
+    )
+
+def send_session_name_update(connection_id, new_name):
+    gateway_client.post_to_connection(
+        ConnectionId=connection_id,
+        Data=json.dumps({"type": "session_name_update", "name": new_name}).encode('utf-8')
+    )
+    
 def lambda_handler(event, context):
     connection_id = event['requestContext']['connectionId']
     body = json.loads(event['body'])
@@ -60,6 +88,13 @@ def lambda_handler(event, context):
         history_data = existing_item.get('History', '[]')
         existing_messages = parse_messages(history_data)
 
+        # 세션 이름 생성
+        if len(existing_messages)==1 and user_message != "":
+            new_session_name=generate_session_name(user_message)
+            update_session_name(user_id, session_id, new_session_name)
+            send_session_name_update(connection_id, new_session_name)
+        
+        
         model = ChatBedrock(
             model_id="anthropic.claude-3-haiku-20240307-v1:0",
             streaming=True,

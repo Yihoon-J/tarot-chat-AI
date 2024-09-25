@@ -245,6 +245,19 @@ function handleIncomingMessage(data) {
         scrollToBottom();
     } else if (data.type === 'error') {
         console.error('Error:', data.message);
+    } else if (data.type === 'session_name_update') {
+        updateSessionName(data.name);
+    }
+}
+
+// 세션 이름 업데이트
+function updateSessionName(newName) {
+    const sessionElement = document.querySelector(`.session-item[data-session-id="${currentSessionId}"]`);
+    if (sessionElement) {
+        const sessionNameSpan = sessionElement.querySelector('span');
+        if (sessionNameSpan) {
+            sessionNameSpan.textContent = newName;
+        }
     }
 }
 
