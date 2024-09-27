@@ -316,8 +316,39 @@ document.getElementById('messageInput').addEventListener('keypress', function(e)
     }
 });
 
-// Initialize the page when the script loads
-document.addEventListener('DOMContentLoaded', initializePage);
+document.addEventListener('DOMContentLoaded', function() {
+    const settingsmodal = document.getElementById("settingsModal");
+    const settingsBtn = document.getElementById("Settings");
+    const settingsspan = document.getElementsByClassName("settingsclose")[0];
+    settingsBtn.onclick = function() {
+        settingsmodal.style.display = "block";
+    }
+    settingsspan.onclick = function() {
+        settingsmodal.style.display = "none";
+    }
+    window.onclick = function(event) {
+        if (event.target == settingsmodal) {
+            settingsmodal.style.display = "none";
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const profilemodal = document.getElementById("profileModal");
+    const profileBtn = document.getElementById("Profile");
+    const profilespan = document.getElementsByClassName("profileclose")[0];
+    profileBtn.onclick = function() {
+        profilemodal.style.display = "block";
+    }
+    profilespan.onclick = function() {
+        profilemodal.style.display = "none";
+    }
+    window.onclick = function(event) {
+        if (event.target == profilemodal) {
+            profilemodal.style.display = "none";
+        }
+    }
+});
 
 // Call this function when the page loads
 document.addEventListener('DOMContentLoaded', () => {

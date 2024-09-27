@@ -20,6 +20,7 @@
 │   │   ├── KakaoAuthDemoDevAuthKakaoStack.template.json
 │   │   ├── KakaoAuthDemoDevAuthStack.assets.json
 │   │   ├── KakaoAuthDemoDevAuthStack.template.json
+│   │   ├── asset.215c9627d73f0f592a587761ab3446c6e2a0962f29f7e485532748a9fe756838
 │   │   ├── asset.3d37704fc90ef759e9d50b5197ed257c8b9546243c111d9ac93e0739128cb43e
 │   │   ├── cdk.out
 │   │   ├── manifest.json
@@ -856,4 +857,4 @@
     ├── tsconfig.json
     └── yarn.lock
 
-817 directories, 40 files
+818 directories, 40 files

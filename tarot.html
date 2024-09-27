@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarot Chat</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+    <link rel="stylesheet" href="tarotchat_modal.css">
     <style>
         body { 
             font-family: 'Pretendard Variable'; 
@@ -13,6 +14,7 @@
             overflow: hidden;
             height: 100vh;
         }
+
         #mainContent {
             display: flex; 
             flex: 1;
@@ -253,6 +255,37 @@
             <div id="sessionList"></div>
             <button id="Settings">서비스 설정</button>
         </div>
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+              <span class="settingsclose">&times;</span>
+              <h2>서비스 설정</h2>
+              <table>
+                <tr>
+                    <td>계정 정보</td>
+                    <td><span id="userDetails"></span></td>
+                </tr>
+                <tr>
+                    <td>credit</td>
+                    <td>Made by...</td>
+                </tr>
+                <tr>
+                    <td>데이터 관리</td>
+                    <td><button id="export">내보내기</button></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><button id="reset">전체 데이터 삭제</button></td>
+                </tr>
+              </table>
+            </div>
+        </div>
+        <div id="profileModal" class="modal">
+            <div class="modal-content">
+              <span class="profileclose">&times;</span>
+              <h2>Profile</h2>
+              <button id="logoutButton" onclick="logout()">Logout</button>
+            </div>
+        </div>
         <div id="serviceguide">
             <div id="GuideTitle">타로 에이전트 질문 가이드</div>
             <div id="Guide1">
@@ -279,9 +312,7 @@
         </div>
         <div id="contentWrapper">
             <div id="userInfo">
-                <p><span id="userDetails"></span></p>
-                <button id="Profile">Profile</button>
-                <button id="logoutButton" onclick="logout()">Logout</button>
+                <button id="Profile">프</button>
             </div>
             <div id="chatArea">
                 <div id="chatBox"></div>
