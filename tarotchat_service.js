@@ -19,6 +19,8 @@ function initializePage() {
     if (authToken && userEmail && userDisplayName && userId) {
         updateUserInfo();
         fetchSessions();
+        updateProfileButton();
+        displayWelcomeMessage();
     } else {
         console.error('Missing user info');
         document.getElementById('userDetails').textContent = 'Error: User not authenticated';
@@ -29,6 +31,11 @@ function initializePage() {
 
 function updateUserInfo() {
     document.getElementById('userDetails').textContent = `${userDisplayName} (${userEmail})`;
+}
+
+function displayWelcomeMessage() {
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '<div class="message ai-message"><div class="message-content">어떤 이야기를 하고 싶나요?</div></div>';
 }
 
 async function fetchSessions() {
@@ -71,6 +78,13 @@ function displaySessions(sessions) {
         
         sessionList.appendChild(sessionElement);
     });
+}
+
+function updateProfileButton() {
+    const profileButton = document.getElementById('ProfileBtn');
+    if (profileButton && userDisplayName) {
+        profileButton.textContent = userDisplayName.charAt(0).toUpperCase();
+    }
 }
 
 function displayMessages(messages) {
@@ -120,7 +134,11 @@ async function loadSession(sessionId) {
             return;
         }
 
-        displayMessages(messages);
+        if (messages.length === 0) {
+            displayWelcomeMessage(); // 메시지가 없는 경우 웰컴 메시지 표시
+        } else {
+            displayMessages(messages);
+        }
         connectWebSocket();
     } catch (error) {
         console.error('Error loading session:', error);
@@ -195,9 +213,11 @@ async function createAndConnectNewSession(initialMessage) {
             }
 
             // Send the initial message after a short delay
-            setTimeout(() => {
-                sendMessageToCurrentSession(initialMessage);
-            }, 500);
+            if (initialMessage) {
+                setTimeout(() => {
+                    sendMessageToCurrentSession(initialMessage);
+                }, 500);
+            }
         } else {
             console.error('Error creating new session:', result.error);
         }
@@ -262,6 +282,9 @@ function updateSessionName(newName) {
 }
 
 async function startNewChat() {
+    currentSessionId = null;
+    document.getElementById('chatBox').innerHTML = '';
+    displayWelcomeMessage();
     await createAndConnectNewSession('');
 }
 
@@ -335,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
     const profilemodal = document.getElementById("profileModal");
-    const profileBtn = document.getElementById("Profile");
+    const profileBtn = document.getElementById("ProfileBtn");
     const profilespan = document.getElementsByClassName("profileclose")[0];
     profileBtn.onclick = function() {
         profilemodal.style.display = "block";
