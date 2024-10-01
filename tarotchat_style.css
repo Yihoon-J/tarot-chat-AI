@@ -310,6 +310,7 @@ button {
   align-self: flex-start;
   color: #5D5671;
   background-color: #eeeeee;
+  position: relative;
 }
 .user-message {
   align-self: flex-end;
@@ -318,6 +319,20 @@ button {
 }
 .message-content {
   word-wrap: break-word;
+}
+.ai-indicator{
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+}
+
+.user-message + .ai-indicator {
+  position: relative;
+  left: 70px;
+  margin-top: 10px;
+  margin-bottom: -20px; /* 다음 메시지와의 간격 조정 */
 }
 
 #messageInput {

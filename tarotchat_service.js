@@ -90,11 +90,19 @@ function updateProfileButton() {
 function displayMessages(messages) {
     const chatBox = document.getElementById('chatBox');
     chatBox.innerHTML = '';
-    messages.forEach(message => {
+    messages.forEach((message, index) => {
         const role = message.type === 'human' ? 'user' : 'ai';
         let content = message.content;
         if (content) {
             appendMessage(role, content);
+            
+            // 사용자 메시지 다음에 AI 인디케이터 추가 (마지막 메시지가 아닌 경우)
+            if (role === 'user' && index < messages.length - 1 && messages[index + 1].type !== 'human') {
+                const aiIndicator = document.createElement('div');
+                aiIndicator.className = 'ai-indicator';
+                aiIndicator.textContent = '*';
+                chatBox.insertBefore(aiIndicator, chatBox.firstChild);
+            }
         }
     });
 }
@@ -240,6 +248,15 @@ function sendMessageToCurrentSession(message) {
 
 function appendMessage(sender, message) {
     const chatBox = document.getElementById('chatBox');
+    
+    // AI 인디케이터 추가 (사용자 메시지 다음에 오는 경우)
+    if (sender === 'user' && chatBox.lastElementChild && chatBox.lastElementChild.classList.contains('user-message')) {
+        const aiIndicator = document.createElement('div');
+        aiIndicator.className = 'ai-indicator';
+        aiIndicator.textContent = '*';
+        chatBox.insertBefore(aiIndicator, chatBox.firstChild);
+    }
+
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}-message`;
     
@@ -249,7 +266,7 @@ function appendMessage(sender, message) {
     
     messageElement.appendChild(contentElement);
     chatBox.insertBefore(messageElement, chatBox.firstChild);
-    scrollToBottom()
+    scrollToBottom();
 }
 
 function scrollToBottom() {
@@ -259,7 +276,17 @@ function scrollToBottom() {
 
 function handleIncomingMessage(data) {
     if (data.type === 'stream') {
-        appendMessage('ai', extractContent(data.content));
+        const content = extractContent(data.content);
+        const lastMessage = document.querySelector('.message:first-child');
+        
+        if (lastMessage && lastMessage.classList.contains('ai-message')) {
+            // 기존 AI 메시지 업데이트
+            lastMessage.querySelector('.message-content').innerHTML += content.replace(/\n/g, '<br>');
+        } else {
+            // 새 AI 메시지 추가
+            appendMessage('ai', content);
+        }
+        scrollToBottom();
     } else if (data.type === 'end') {
         console.log('Stream ended');
         scrollToBottom();
