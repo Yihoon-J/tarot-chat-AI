@@ -1,0 +1,383 @@
+/* 스크롤바 구현 보류 */
+/* ai 메시지 간 좁은 간격 미구현, 상단 32px 임시처리 */
+/* 최소 높이 구현 시 레이아웃 박살나는 관계로 우선 미구현 */
+
+button {
+  cursor: pointer;
+}
+
+#mainContent {
+  display: flex; 
+  flex: 1;
+}
+
+/* 사이드바 펼침 */
+#sidebar {
+  display: flex;
+  width: 367px;
+  flex-direction: column;
+  align-items: center;
+  background-color: #F6F6F6; 
+  padding: 10px 0; 
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-right: 1px solid #E0E0E0;
+}
+
+#sidebar.expanded{
+  width: 367px;
+}
+
+#sidebar.collapsed{
+  width: 80px;
+}
+
+/* 사이드바 접음 */
+#collapsedSidebar{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+  background-color: #F6F6F6;
+  padding: 10px 0;
+  border-right: 1px solid #E0E0E0;
+}
+
+
+/* 메인 타이틀, 사이드바 접기 영역 */
+#TitleBox{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 80px;
+  width: 315px;
+  margin: 16px 20px;
+  align-items: center;
+}
+
+/* 서비스 메인 타이틀 */
+#MainTitle{
+  height: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: left;
+  padding-left: 26px;
+  padding-right: 26px;
+}
+#CollapseBtn{
+  height: 40px;
+  width: 40px;
+}
+/* 사이드바 가로 구분선 */
+.divLine{
+  height: 1px;
+  width: 100%;
+  background-color: #E0E0E0;
+}
+
+/* 새 대화 시작 버튼 */
+#newChatButton {
+  position: static;         
+  width: 327px;
+  height: 55px;
+  background: #F6F6F6;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: left;
+  padding: 14px 24px;
+  margin: 16px 20px;
+  color: #7d7d7d;
+  transition: background-color 0.3s ease;
+}
+#newChatButton:hover {
+  background-color: #ececec;
+  color: #646464;
+}
+
+/* 세션 목록 박스 */
+#sessionList{
+  width: 367px;
+  display: flex;
+  flex-direction:column;
+  align-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0;
+}
+
+/* 세션 목록 내 개별 세션 */
+.session-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer; 
+  width: 279px;
+  height: 27px;
+  overflow: hidden;
+  padding: 14px 24px;
+  text-align: left;
+  border-radius: 16px;
+  font-size: 14px;
+  transition: background-color 0.3s ease; 
+}
+.session-item:hover {
+  background-color: #ececec;
+}
+.session-item.active {
+  background-color: #dddddd
+}
+.delete-button{
+  background-color: #ff4d4d;
+  cursor: pointer;
+}
+.session-item:hover .delete-button {
+  opacity: 1;
+}
+.delete-button.hover {
+  background-color: #ff3333
+}
+
+/* 설정 버튼 */
+#Settings{
+  position: absolute;
+  width: 327px;
+  height: 55px;
+  bottom: 10px;
+  padding: 14px 24px;
+  margin: 16px 0;
+  background: #F6F6F6;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  text-align: left;
+  color: #7d7d7d;
+  transition: background-color 0.3s ease;
+}
+#Settings:hover{
+  background-color: #ececec;
+  color: #646464;
+}
+
+/* 사이드바 접었을 때 - 버튼 공통 */
+#collapsedSidebar button {
+  width: 40px;
+  height: 40px;
+  margin: 20px;
+  border: none;
+  border-radius: 12px;
+}
+
+/* 사이드바 접었을 때 - 설정 버튼 */
+#collapsedSettingsBtn{
+  position: absolute;
+  bottom: 10px;
+}
+
+/* 가이드 영역 */
+#serviceguide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 278px; 
+  background-color: #FFFFFF; 
+  padding: 40px 20px; 
+  overflow-y: auto;
+  border-right: 1px solid #E0E0E0;
+}
+
+/* 타로 에이전트 질문 가이드 */
+#GuideTitle{
+  height: 24px;
+  line-height: 132%;
+  font-style: bold;
+  font-size: 14px;
+  color: #222222;
+  margin-bottom: 26px;
+}
+
+/* 질문 가이드 박스 */
+#Guide1, #Guide2, #Guide3{
+  width: 235px;
+  border-radius: 16px;
+  border: 1px solid #E0E0E0;
+  padding: 14px 19px;;
+  margin-bottom: 26px;
+}
+
+/* 질문 가이드 제목 */
+#guide1title, #guide2title, #guide3title{
+  font-size: 14px;
+  line-height: 150%;
+  color: #222222;
+  margin-bottom: 20px;
+}
+
+/* 질문 가이드 1문단(불릿포인트 위) */
+#guide1p1, #guide2p1, #guide3p1{
+  font-size: 14px;
+  line-height: 150%;
+  color: #000000;
+  opacity: 0.7;
+  margin-bottom: 12px;
+}
+
+/* 질문 가이드 2문단(불릿포인트) */
+#guide1p2, #guide2p2{
+  font-size: 14px;
+  line-height: 150%;
+  color: #000000;
+  opacity: 0.7;
+  padding-left: 30px;
+}
+
+/* 불릿포인트 내 첫번째 불릿 */
+#g1p2b1, #g2p2b1{
+  margin-bottom: 12px;
+}
+
+/* 메인 영역 전체 wrapper */
+#contentWrapper {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  flex: 1;
+  align-items: center;
+  height: 100vh;
+  overflow: auto;
+}
+
+/* 사용자 프로필 표시 영역 */
+#ProfileBtn {
+  position: absolute; 
+  top: 0px;
+  right: 0px;
+  background: #5D5671;
+  color: #FFFFFF;
+  height: 36px;
+  width: 36px;
+  text-align: center;
+  font-size: 16px;
+  border-radius: 160px;
+  border: 0px;
+}
+
+/* 메시지 입력 및 전송 영역 */
+#inputArea {
+  box-sizing: border-box;
+  position: absolute;
+  bottom: 50px;
+  flex-direction: row;
+  left: 50%;
+  transform: translateX(-50%);
+  display:flex;
+  align-items: center;
+  height: 73px;
+  width: 90%;
+  background: #FFFFFF;
+  border: 1.3px solid #7d7d7d;
+  border-radius: 36.5px;
+}
+
+/* 대화 영역 */
+/* margin-bottom = ??? */
+#chatBox {
+  position: absolute;
+  top: 40px;
+  bottom: 133px;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+  width: 100%;
+  margin: 
+  padding: 0px;
+  background-color: #ffffff;
+}
+/* 말풍선 공통 */
+.message {
+  height: auto;
+  max-width: 490px;
+  padding: 12px 20px;
+  margin-top: 32px;
+  margin-left: 70px;
+  margin-right: 70px;
+  border-radius: 16px;
+  word-wrap: break-word;
+}
+.ai-message {
+  align-self: flex-start;
+  color: #5D5671;
+  background-color: #eeeeee;
+}
+.user-message {
+  align-self: flex-end;
+  color: #222222;
+  background-color: #f8f8f8;
+}
+.message-content {
+  word-wrap: break-word;
+}
+
+#messageInput {
+  flex: 1;
+  height: 65px;
+  margin-top: 2px;
+  margin-left: 30px;
+  margin-right: 15px;
+  border: 0px;
+  width: 80%;
+}
+
+#warningmsg {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 15.84px;
+  text-align: center;
+  color: #7D7D7D;
+}
+
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  .modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+  }
+  
+  .profileclose, .settingsclose {
+    color: #aaa;
+    float: right;
+    cursor: pointer;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  
+  .profileclose:hover, .settingsclose:hover,
+  .profileclose:focus, .settingsclose:hover {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }

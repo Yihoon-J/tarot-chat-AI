@@ -377,3 +377,33 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', () => {
     initializePage();
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const collapsedSidebar = document.getElementById('collapsedSidebar');
+    const collapseBtn = document.getElementById('collapseBtn');
+    const expandBtn = document.getElementById('expandBtn');
+    const collapsedNewChatBtn = document.getElementById('collapsedNewChatBtn');
+    const collapsedSettingsBtn = document.getElementById('collapsedSettingsBtn');
+  
+    function collapseSidebar() {
+      sidebar.style.display = 'none';
+      collapsedSidebar.style.display = 'flex';
+    }
+  
+    function expandSidebar() {
+      sidebar.style.display = 'flex';
+      collapsedSidebar.style.display = 'none';
+    }
+  
+    collapseBtn.addEventListener('click', collapseSidebar);
+    expandBtn.addEventListener('click', expandSidebar);
+  
+    collapsedNewChatBtn.addEventListener('click', function() {
+      startNewChat();
+    });
+  
+    collapsedSettingsBtn.addEventListener('click', function() {
+      document.getElementById('Settings').click();
+    });
+  });
