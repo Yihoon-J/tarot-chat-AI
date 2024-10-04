@@ -264,7 +264,7 @@ button {
   border: 0px;
 }
 
-/* 메시지 입력 및 전송 영역 */
+/* 메시지 입력 및 전송 박스 */
 #inputArea {
   box-sizing: border-box;
   position: absolute;
@@ -281,6 +281,32 @@ button {
   border-radius: 36.5px;
 }
 
+#inputArea:disabled {
+  box-sizing: border-box;
+  position: absolute;
+  bottom: 50px;
+  flex-direction: row;
+  left: 50%;
+  transform: translateX(-50%);
+  display:flex;
+  align-items: center;
+  height: 73px;
+  width: 90%;
+  background: #FFFFFF;
+  border: 1.3px solid #992222;
+  border-radius: 36.5px;
+}
+
+#SendButton{
+  background-color: #FFFFFF;
+  border: 0px;
+}
+
+#SendButton:disabled{
+  cursor: not-allowed;
+  background-color: #992222;
+}
+
 /* 대화 영역 */
 /* margin-bottom = ??? */
 #chatBox {
@@ -291,10 +317,10 @@ button {
   flex-direction: column-reverse;
   overflow-y: auto;
   width: 100%;
-  margin: 
   padding: 0px;
   background-color: #ffffff;
 }
+
 /* 말풍선 공통 */
 .message {
   height: auto;
@@ -317,15 +343,16 @@ button {
   color: #222222;
   background-color: #f8f8f8;
 }
+
 .message-content {
   word-wrap: break-word;
 }
 .ai-indicator{
   position: absolute;
   left: 10px;
-  top: 50%;
+  bottom: 0%;
   transform: translateY(-50%);
-  font-size: 18px;
+  font-size: 28px;
 }
 
 .user-message + .ai-indicator {

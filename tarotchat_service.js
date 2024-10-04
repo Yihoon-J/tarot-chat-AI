@@ -4,6 +4,8 @@ let userEmail;
 let userDisplayName;
 let userId;
 let currentSessionId;
+let isWaitingForResponse = false;
+
 
 const API_URL = 'https://blgg29wto5.execute-api.us-east-1.amazonaws.com/product';
 const WS_URL = 'wss://tt0ikgb3sd.execute-api.us-east-1.amazonaws.com/production';
@@ -184,10 +186,23 @@ function connectWebSocket() {
     });
 }
 
+function disableInput() {
+    document.getElementById('messageInput').disabled = true;
+    document.getElementById('SendButton').disabled = true;
+    isWaitingForResponse = true;
+}
+
+function enableInput() {
+    document.getElementById('messageInput').disabled = false;
+    document.getElementById('SendButton').disabled = false;
+    isWaitingForResponse = false;
+}
+
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
-    if (message) {
+    if (message && !isWaitingForResponse) {
+        disableInput();
         if (!currentSessionId) {
             await createAndConnectNewSession(message);
         } else {
@@ -196,6 +211,7 @@ async function sendMessage() {
         messageInput.value = '';
     }
 }
+
 
 // 세션 생성과 연결 동시에 수행
 async function createAndConnectNewSession(initialMessage) {
@@ -280,18 +296,18 @@ function handleIncomingMessage(data) {
         const lastMessage = document.querySelector('.message:first-child');
         
         if (lastMessage && lastMessage.classList.contains('ai-message')) {
-            // 기존 AI 메시지 업데이트
             lastMessage.querySelector('.message-content').innerHTML += content.replace(/\n/g, '<br>');
         } else {
-            // 새 AI 메시지 추가
             appendMessage('ai', content);
         }
         scrollToBottom();
     } else if (data.type === 'end') {
         console.log('Stream ended');
         scrollToBottom();
+        enableInput();
     } else if (data.type === 'error') {
         console.error('Error:', data.message);
+        enableInput();
     } else if (data.type === 'session_name_update') {
         updateSessionName(data.name);
     }
@@ -403,6 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Call this function when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     initializePage();
+    document.getElementById('SendButton').addEventListener('click', sendMessage);
 });
 
 document.addEventListener('DOMContentLoaded', function() {
