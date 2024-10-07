@@ -5,6 +5,7 @@ let userDisplayName;
 let userId;
 let currentSessionId;
 let isWaitingForResponse = false;
+let isInputFocused = false;
 
 
 const API_URL = 'https://blgg29wto5.execute-api.us-east-1.amazonaws.com/product';
@@ -198,6 +199,27 @@ function enableInput() {
     isWaitingForResponse = false;
 }
 
+function updateInputAreaStyle() {
+    const messageInput = document.getElementById('messageInput');
+    const inputArea = document.getElementById('inputArea');
+    const sendButton = document.getElementById('SendButton');
+
+    if (messageInput.value.trim() === '') {
+        sendButton.classList.add('disabled');
+        sendButton.disabled = true;
+        
+        if (!isInputFocused) {
+            inputArea.classList.add('disabled');
+        } else {
+            inputArea.classList.remove('disabled');
+        }
+    } else {
+        inputArea.classList.remove('disabled');
+        sendButton.classList.remove('disabled');
+        sendButton.disabled = false;
+    }
+}
+
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
@@ -264,14 +286,6 @@ function sendMessageToCurrentSession(message) {
 
 function appendMessage(sender, message) {
     const chatBox = document.getElementById('chatBox');
-    
-    // AI 인디케이터 추가 (사용자 메시지 다음에 오는 경우)
-    if (sender === 'user' && chatBox.lastElementChild && chatBox.lastElementChild.classList.contains('user-message')) {
-        const aiIndicator = document.createElement('div');
-        aiIndicator.className = 'ai-indicator';
-        aiIndicator.textContent = '*';
-        chatBox.insertBefore(aiIndicator, chatBox.firstChild);
-    }
 
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}-message`;
@@ -281,6 +295,27 @@ function appendMessage(sender, message) {
     contentElement.innerHTML = message.replace(/\n/g, '<br>');
     
     messageElement.appendChild(contentElement);
+    
+    // AI 인디케이터 추가 (사용자 메시지 다음에 오는 경우)
+    if (sender === 'user') {
+        const spacerElement = document.createElement('div');
+        spacerElement.className = 'message-spacer';
+        
+        const aiIndicator = document.createElement('div');
+        aiIndicator.className = 'ai-indicator';
+        aiIndicator.textContent = '*';
+        
+        spacerElement.appendChild(aiIndicator);
+        
+        chatBox.insertBefore(spacerElement, chatBox.firstChild);
+    } else if (sender === 'ai') {
+        // AI 메시지인 경우, 이전에 추가된 spacer와 indicator를 제거
+        const previousSpacer = chatBox.querySelector('.message-spacer');
+        if (previousSpacer) {
+            chatBox.removeChild(previousSpacer);
+        }
+    }
+    
     chatBox.insertBefore(messageElement, chatBox.firstChild);
     scrollToBottom();
 }
@@ -294,12 +329,19 @@ function handleIncomingMessage(data) {
     if (data.type === 'stream') {
         const content = extractContent(data.content);
         const lastMessage = document.querySelector('.message:first-child');
+        const spacer = document.querySelector('.message-spacer');
         
         if (lastMessage && lastMessage.classList.contains('ai-message')) {
             lastMessage.querySelector('.message-content').innerHTML += content.replace(/\n/g, '<br>');
         } else {
             appendMessage('ai', content);
         }
+
+        // AI 메시지가 시작되면 spacer 제거
+        if (spacer) {
+            spacer.remove();
+        }
+
         scrollToBottom();
     } else if (data.type === 'end') {
         console.log('Stream ended');
@@ -416,11 +458,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Call this function when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     initializePage();
-    document.getElementById('SendButton').addEventListener('click', sendMessage);
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('SendButton');
+
+    messageInput.addEventListener('input', updateInputAreaStyle);
+    sendButton.addEventListener('click', sendMessage);
+
+    messageInput.addEventListener('focus', () => {
+        isInputFocused = true;
+        updateInputAreaStyle();
+    });
+
+    messageInput.addEventListener('blur', () => {
+        isInputFocused = false;
+        updateInputAreaStyle();
+    });
+
+    // 초기 상태 설정
+    updateInputAreaStyle();
 });
+
 
 document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');

@@ -281,7 +281,7 @@ button {
   border-radius: 36.5px;
 }
 
-#inputArea:disabled {
+#inputArea.disabled {
   box-sizing: border-box;
   position: absolute;
   bottom: 50px;
@@ -293,7 +293,7 @@ button {
   height: 73px;
   width: 90%;
   background: #FFFFFF;
-  border: 1.3px solid #992222;
+  border: 1.3px solid #e0e0e0;
   border-radius: 36.5px;
 }
 
@@ -304,7 +304,7 @@ button {
 
 #SendButton:disabled{
   cursor: not-allowed;
-  background-color: #992222;
+  background-color: #e0e0e0;
 }
 
 /* 대화 영역 */
@@ -347,11 +347,20 @@ button {
 .message-content {
   word-wrap: break-word;
 }
+
+.message-spacer {
+  height: 100px;
+  position: relative;
+  margin-top: 32px;
+  margin-left: 70px;
+  margin-right: 70px;
+}
+
 .ai-indicator{
   position: absolute;
   left: 10px;
   bottom: 0%;
-  transform: translateY(-50%);
+  /* transform: translateY(-50%); */
   font-size: 28px;
 }
 
