@@ -3,6 +3,7 @@ let authToken;
 let userEmail;
 let userDisplayName;
 let userId;
+let sessionToDelete;
 let currentSessionId;
 let isWaitingForResponse = false;
 let isInputFocused = false;
@@ -68,7 +69,7 @@ function displaySessions(sessions) {
         deleteButton.textContent = 'D';
         deleteButton.onclick = (e) => {
             e.stopPropagation(); // 세션 로드 방지
-            deleteSession(session.SessionId);
+            showDeleteModal(session.SessionId);
         };
         
         sessionElement.appendChild(sessionName);
@@ -373,13 +374,17 @@ async function startNewChat() {
     await createAndConnectNewSession('');
 }
 
-async function deleteSession(sessionId) {
-    if (!confirm('정말로 이 세션을 삭제하시겠습니까?')) {
-        return;
-    }
+function showDeleteModal(sessionId) {
+    sessionToDelete = sessionId;
+    const modal = document.getElementById('deleteSessionModal');
+    modal.style.display = 'block';
+}
+
+async function deleteSession() {
+    if (!sessionToDelete) return;
 
     try {
-        const response = await fetch(`${API_URL}/sessions/${sessionId}?userId=${userId}`, {
+        const response = await fetch(`${API_URL}/sessions/${sessionToDelete}?userId=${userId}`, {
             method: 'DELETE',
             headers: { 'Authorization': authToken }
         });
@@ -387,7 +392,7 @@ async function deleteSession(sessionId) {
         if (response.ok) {
             console.log('Session deleted successfully');
             fetchSessions(); // 세션 목록 새로고침
-            if (currentSessionId === sessionId) {
+            if (currentSessionId === sessionToDelete) {
                 currentSessionId = null;
                 document.getElementById('chatBox').innerHTML = '';
             }
@@ -397,6 +402,14 @@ async function deleteSession(sessionId) {
     } catch (error) {
         console.error('Error deleting session:', error);
     }
+
+    closeDeleteModal();
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteSessionModal');
+    modal.style.display = 'none';
+    sessionToDelete = null;
 }
 
 function logout() {
@@ -454,6 +467,23 @@ document.addEventListener('DOMContentLoaded', function() {
     window.onclick = function(event) {
         if (event.target == profilemodal) {
             profilemodal.style.display = "none";
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteSessionModal');
+    const closeBtn = deleteModal.querySelector('.close');
+    const confirmBtn = document.getElementById('confirmDelete');
+    const cancelBtn = document.getElementById('cancelDelete');
+
+    closeBtn.onclick = closeDeleteModal;
+    confirmBtn.onclick = deleteSession;
+    cancelBtn.onclick = closeDeleteModal;
+
+    window.onclick = function(event) {
+        if (event.target == deleteModal) {
+            closeDeleteModal();
         }
     }
 });
